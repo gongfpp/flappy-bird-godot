@@ -1,0 +1,72 @@
+name: Test and deploy Godot Web
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: bash
+
+permissions:
+  contents: read
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+env:
+  GODOT_VERSION: 4.6.3
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      XDG_DATA_HOME: ${{ runner.temp }}/godot-data
+      XDG_CONFIG_HOME: ${{ runner.temp }}/godot-config
+      XDG_CACHE_HOME: ${{ runner.temp }}/godot-cache
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Install verified official Godot and matching Web templates
+        run: bash ci/install-godot.sh
+      - name: Import clean source
+        run: |
+          mkdir -p "$XDG_DATA_HOME" "$XDG_CONFIG_HOME" "$XDG_CACHE_HOME"
+          godot --headless --editor --path . --import 2>&1 | tee "$RUNNER_TEMP/import.log"
+          ! grep -Eq '^(SCRIPT ERROR:|ERROR:)' "$RUNNER_TEMP/import.log"
+      - name: Test mechanics and persistence
+        run: bash tests/run_tests.sh
+      - name: Test real scene and input integration
+        run: bash tests/run_integration.sh
+      - name: Export single-threaded Compatibility release
+        run: |
+          mkdir -p build/web
+          godot --headless --path . --export-release Web build/web/index.html 2>&1 | tee "$RUNNER_TEMP/export.log"
+          ! grep -Eq '^(SCRIPT ERROR:|ERROR:)' "$RUNNER_TEMP/export.log"
+      - name: Stamp version and hash deployable files
+        run: python3 ci/stamp-web.py build/web
+      - name: Upload the exact Pages artifact
+        uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3
+        with:
+          path: build/web
+
+  deploy:
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Configure Pages
+        uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
+      - name: Deploy tested artifact
+        id: deployment
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4

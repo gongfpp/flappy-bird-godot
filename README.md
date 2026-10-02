@@ -8,6 +8,9 @@ Sky Hop has its own dusk-sky visual identity, code-drawn bird and scenery, and s
 
 ## Play / 运行
 
+**[Play in your browser / 在线游玩](https://gongfpp.github.io/flappy-bird-godot/)**
+
+
 1. Install [Godot 4.6.3](https://godotengine.org/download/archive/4.6.3-stable/) (standard edition; no .NET required)
 2. Clone this repository and import `project.godot`
 3. Press **F6** on `main.tscn`, or **F5** to run the project
@@ -64,7 +67,11 @@ python3 -m http.server 8060 --directory build/web
 
 Open `http://localhost:8060`. Use HTTP(S), not a `file://` URL. Keep the generated HTML, JS, WASM, PCK, worklets and images together. The preset uses WebGL 2 / Compatibility and disables threading, so it does not require cross-origin-isolation headers. Browser autoplay rules require a first tap/key press before audio can start.
 
-A successful export is not proof of browser playability. The initial release's actual verification status is recorded in [docs/QA.md](docs/QA.md). No Pages deployment is configured by this project.
+The [Pages workflow](.github/workflows/pages.yml) tests each `main` push, downloads the official Godot 4.6.3 engine and matching Web template with pinned SHA-256 verification, then publishes the resulting artifact to GitHub Pages. No personal token or repository secret is needed. Official GitHub Actions are pinned to commit SHAs.
+
+The live [version.json](https://gongfpp.github.io/flappy-bird-godot/version.json) records the source commit, workflow run, engine version, and hashes/sizes of every exported file; `SHA256SUMS` also covers the version file. The small build link in the page opens this record.
+
+A successful export or deployment alone is not proof of browser playability. The initial pre-deployment verification is preserved in [docs/QA.md](docs/QA.md); its browser restrictions describe that initial local test, not a hosted-browser acceptance claim.
 
 ## Structure
 
