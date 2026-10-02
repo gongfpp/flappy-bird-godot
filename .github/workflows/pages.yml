@@ -23,13 +23,14 @@ jobs:
   build:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
-    env:
-      XDG_DATA_HOME: ${{ runner.temp }}/godot-data
-      XDG_CONFIG_HOME: ${{ runner.temp }}/godot-config
-      XDG_CACHE_HOME: ${{ runner.temp }}/godot-cache
     steps:
       - name: Check out source
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Isolate Godot data and caches
+        run: |
+          echo "XDG_DATA_HOME=$RUNNER_TEMP/godot-data" >> "$GITHUB_ENV"
+          echo "XDG_CONFIG_HOME=$RUNNER_TEMP/godot-config" >> "$GITHUB_ENV"
+          echo "XDG_CACHE_HOME=$RUNNER_TEMP/godot-cache" >> "$GITHUB_ENV"
       - name: Install verified official Godot and matching Web templates
         run: bash ci/install-godot.sh
       - name: Import clean source
