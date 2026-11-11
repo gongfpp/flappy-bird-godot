@@ -16,6 +16,7 @@ html = root / "index.html"
 text = html.read_text()
 text = text.replace("</head>", f'<meta name="source-commit" content="{commit}">\n</head>')
 text = text.replace("</body>", f'<a href="version.json" title="Build {commit}" style="position:fixed;bottom:5px;left:8px;z-index:10;color:#a8b2c8;font:10px monospace;text-decoration:none">build {commit[:7]}</a>\n</body>')
+text = text.replace('</body>', (Path(__file__).parent / 'visitor-footer.html').read_text() + '\n</body>')
 html.write_text(text)
 (root / ".nojekyll").touch()
 files = {
